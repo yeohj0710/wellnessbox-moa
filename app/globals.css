@@ -1,0 +1,4 @@
+/* stylelint-disable at-rule-no-unknown */
+@config "../tailwind.config.js";
+@import "tailwindcss";
+/* stylelint-enable */

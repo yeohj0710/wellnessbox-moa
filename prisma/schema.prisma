@@ -1,0 +1,128 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              Int            @id @default(autoincrement())
+  email           String         @unique
+  name            String?
+  recommendations String?
+  passwordHash    String
+  surveyAnswers   SurveyAnswer[]
+  chatMessages    ChatMessage[]
+  sessions        Session[]
+  consultations   Consultation[]
+  feedbacks       Feedback[]
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+}
+
+model Session {
+  id           Int      @id @default(autoincrement())
+  sessionToken String   @unique
+  user         User     @relation(fields: [userId], references: [id])
+  userId       Int
+  expires      DateTime
+}
+
+model SurveyQuestion {
+  id        Int            @id @default(autoincrement())
+  text      String
+  answers   SurveyAnswer[]
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+}
+
+model SurveyAnswer {
+  id         Int            @id @default(autoincrement())
+  user       User           @relation(fields: [userId], references: [id])
+  userId     Int
+  question   SurveyQuestion @relation(fields: [questionId], references: [id])
+  questionId Int
+  answer     String
+  createdAt  DateTime       @default(now())
+}
+
+model ChatMessage {
+  id        Int      @id @default(autoincrement())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
+  role      String
+  content   String
+  createdAt DateTime @default(now())
+}
+
+model Pharmacist {
+  id            Int                 @id @default(autoincrement())
+  email         String              @unique
+  name          String?
+  passwordHash  String
+  approval      String?
+  sessions      PharmacistSession[]
+  consultations Consultation[]
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+}
+
+model PharmacistSession {
+  id           Int        @id @default(autoincrement())
+  sessionToken String     @unique
+  pharmacist   Pharmacist @relation(fields: [pharmacistId], references: [id])
+  pharmacistId Int
+  expires      DateTime
+}
+
+model Consultation {
+  id           Int                   @id @default(autoincrement())
+  user         User                  @relation(fields: [userId], references: [id])
+  userId       Int
+  pharmacist   Pharmacist?           @relation(fields: [pharmacistId], references: [id])
+  pharmacistId Int?
+  messages     ConsultationMessage[]
+  ended        Boolean               @default(false)
+  createdAt    DateTime              @default(now())
+  feedbacks    Feedback[]
+}
+
+model ConsultationMessage {
+  id             Int          @id @default(autoincrement())
+  consultation   Consultation @relation(fields: [consultationId], references: [id])
+  consultationId Int
+  fromUser       Boolean
+  content        String
+  createdAt      DateTime     @default(now())
+}
+
+model Supplement {
+  id         Int      @id @default(autoincrement())
+  name       String
+  price      Int
+  unit       String
+  imageUrl   String
+  importance Float?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Feedback {
+  id             Int           @id @default(autoincrement())
+  user           User?         @relation(fields: [userId], references: [id])
+  userId         Int?
+  consultation   Consultation? @relation(fields: [consultationId], references: [id])
+  consultationId Int?
+  type           String
+  summary        String
+  createdAt      DateTime      @default(now())
+}
